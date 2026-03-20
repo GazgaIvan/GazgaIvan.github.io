@@ -1,0 +1,187 @@
+{
+  "name": "Lead Enrichment con IA → Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-capture",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Formulario Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "lead-capture-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst nombre = body.nombre || body.name || '';\nconst email = body.email || '';\nconst empresa = body.empresa || body.company || '';\nconst cargo = body.cargo || body.role || '';\nconst mensaje = body.mensaje || body.message || '';\n\nif (!email) {\n  throw new Error('Email es requerido');\n}\n\nreturn [{\n  json: {\n    nombre,\n    email,\n    empresa,\n    cargo,\n    mensaje,\n    fecha_captura: new Date().toISOString(),\n    fuente: 'formulario_web'\n  }\n}];"
+      },
+      "id": "code-validate",
+      "name": "Validar y Limpiar Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-opus-4-5",
+        "options": {},
+        "messages": {
+          "values": [
+            {
+              "content": "=Eres un especialista en calificación de leads B2B para una empresa de tecnología/software.\n\nAnaliza la siguiente información de un prospecto y genera un perfil enriquecido en formato JSON con estos campos:\n- score: número del 1-100 indicando calidad del lead\n- nivel_interes: 'alto' | 'medio' | 'bajo'\n- perfil_comprador: descripción breve del tipo de comprador\n- industria_probable: industria estimada según empresa/cargo\n- accion_recomendada: qué hacer con este lead (ej: 'agendar demo inmediata', 'nurturing por email', 'descartar')\n- tags: array de 3-5 etiquetas relevantes\n- resumen: 2-3 oraciones sobre por qué este lead es o no prometedor\n\nDatos del prospecto:\n- Nombre: {{ $json.nombre }}\n- Email: {{ $json.email }}\n- Empresa: {{ $json.empresa }}\n- Cargo: {{ $json.cargo }}\n- Mensaje: {{ $json.mensaje }}\n\nResponde ÚNICAMENTE con el JSON, sin explicaciones adicionales ni bloques de código."
+            }
+          ]
+        }
+      },
+      "id": "anthropic-enrich",
+      "name": "Enriquecer Lead con IA (Claude)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadData = $('Validar y Limpiar Datos').first().json;\nconst aiRaw = $input.first().json.text || $input.first().json.content || '{}';\n\nlet aiData = {};\ntry {\n  const cleaned = aiRaw.replace(/```json|```/g, '').trim();\n  aiData = JSON.parse(cleaned);\n} catch(e) {\n  aiData = { score: 50, nivel_interes: 'medio', accion_recomendada: 'revisar manualmente', resumen: aiRaw };\n}\n\nreturn [{\n  json: {\n    ...leadData,\n    ...aiData,\n    procesado_en: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-merge",
+      "name": "Combinar Datos Lead + IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "nombre": "={{ $json.nombre }}",
+            "email": "={{ $json.email }}",
+            "empresa": "={{ $json.empresa }}",
+            "cargo": "={{ $json.cargo }}",
+            "mensaje": "={{ $json.mensaje }}",
+            "score_ia": "={{ $json.score }}",
+            "nivel_interes": "={{ $json.nivel_interes }}",
+            "perfil_comprador": "={{ $json.perfil_comprador }}",
+            "industria_probable": "={{ $json.industria_probable }}",
+            "accion_recomendada": "={{ $json.accion_recomendada }}",
+            "tags": "={{ $json.tags ? $json.tags.join(', ') : '' }}",
+            "resumen_ia": "={{ $json.resumen }}",
+            "fecha_captura": "={{ $json.fecha_captura }}",
+            "procesado_en": "={{ $json.procesado_en }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "google-sheets",
+      "name": "Guardar en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "high-score",
+              "leftValue": "={{ $json.score }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-hot-lead",
+      "name": "¿Es Hot Lead? (score ≥ 70)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "=🔥 *Nuevo Hot Lead Capturado!*\n\n*Nombre:* {{ $json.nombre }}\n*Email:* {{ $json.email }}\n*Empresa:* {{ $json.empresa }}\n*Cargo:* {{ $json.cargo }}\n\n*Score IA:* {{ $json.score }}/100\n*Nivel de Interés:* {{ $json.nivel_interes }}\n*Acción Recomendada:* {{ $json.accion_recomendada }}\n\n*Resumen:* {{ $json.resumen }}",
+        "options": {}
+      },
+      "id": "slack-notify",
+      "name": "Notificar en Slack (Hot Lead)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"success\", \"message\": \"Lead recibido y procesado correctamente\", \"score\": {{ $('Combinar Datos Lead + IA').first().json.score }} }",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Responder al Formulario",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 420]
+    }
+  ],
+  "connections": {
+    "Webhook - Formulario Lead": {
+      "main": [[{ "node": "Validar y Limpiar Datos", "type": "main", "index": 0 }]]
+    },
+    "Validar y Limpiar Datos": {
+      "main": [[{ "node": "Enriquecer Lead con IA (Claude)", "type": "main", "index": 0 }]]
+    },
+    "Enriquecer Lead con IA (Claude)": {
+      "main": [[{ "node": "Combinar Datos Lead + IA", "type": "main", "index": 0 }]]
+    },
+    "Combinar Datos Lead + IA": {
+      "main": [[{ "node": "Guardar en Google Sheets", "type": "main", "index": 0 }]]
+    },
+    "Guardar en Google Sheets": {
+      "main": [[{ "node": "¿Es Hot Lead? (score ≥ 70)", "type": "main", "index": 0 }]]
+    },
+    "¿Es Hot Lead? (score ≥ 70)": {
+      "main": [
+        [{ "node": "Notificar en Slack (Hot Lead)", "type": "main", "index": 0 }],
+        [{ "node": "Responder al Formulario", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["portafolio", "lead-enrichment", "ia", "google-sheets"],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

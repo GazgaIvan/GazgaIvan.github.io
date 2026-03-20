@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iván Gazga · Especialista en IA & Automatización</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #080c10;
+    --surface:   #0e1419;
+    --border:    #1e2730;
+    --accent:    #00e5ff;
+    --accent2:   #7c3aed;
+    --text:      #e8edf2;
+    --muted:     #5a6a7a;
+    --tag-bg:    #111820;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .6;
+  }
+
+  /* ── GLOW BLOBS ── */
+  .blob {
+    position: fixed; border-radius: 50%;
+    filter: blur(120px); opacity: .12; pointer-events: none; z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--accent);  top: -200px; left: -200px; }
+  .blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; right: -150px; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 2.5rem;
+    background: rgba(8,12,16,.75);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    color: var(--accent); letter-spacing: -.02em;
+  }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 1; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2rem 4rem;
+  }
+  .hero-inner { max-width: 1100px; margin: 0 auto; }
+
+  .hero-eyebrow {
+    font-size: .75rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: block;
+    width: 32px; height: 1px; background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 800; line-height: 1.0;
+    letter-spacing: -.04em;
+    margin-bottom: 2rem;
+  }
+  h1 .outline {
+    -webkit-text-stroke: 1.5px var(--text);
+    color: transparent;
+  }
+  h1 .glow { color: var(--accent); }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 1rem; color: var(--muted);
+    line-height: 1.8; margin-bottom: 2.5rem;
+  }
+
+  .hero-chips { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 3rem; }
+  .chip {
+    background: var(--tag-bg); border: 1px solid var(--border);
+    color: var(--muted); font-size: .72rem;
+    padding: .35rem .85rem; border-radius: 999px;
+    letter-spacing: .08em; text-transform: uppercase;
+    transition: border-color .2s, color .2s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: .6rem;
+    background: var(--accent); color: #000;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: .85rem; letter-spacing: .06em; text-transform: uppercase;
+    padding: .85rem 2rem; border-radius: 4px; text-decoration: none;
+    transition: opacity .2s, transform .2s;
+  }
+  .hero-cta:hover { opacity: .85; transform: translateY(-2px); }
+
+  /* ── SECTION TITLES ── */
+  .section-label {
+    font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: .75rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-label::before {
+    content: ''; width: 20px; height: 1px; background: var(--accent);
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800; letter-spacing: -.03em;
+    margin-bottom: 1rem;
+  }
+  .section-desc { color: var(--muted); max-width: 520px; margin-bottom: 3.5rem; font-size: .9rem; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); gap: 1.5px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5px; }
+
+  /* ── CARD BASE ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    transition: border-color .25s, transform .25s;
+    position: relative; overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,229,255,.03) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0; transition: opacity .3s;
+  }
+  .card:hover { border-color: rgba(0,229,255,.35); transform: translateY(-3px); }
+  .card:hover::after { opacity: 1; }
+
+  /* ── WEB PROJECTS ── */
+  #web { padding: 7rem 0; }
+
+  .project-card { cursor: pointer; }
+
+  .project-preview {
+    width: 100%; height: 200px;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    margin-bottom: 1.5rem;
+    overflow: hidden; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .project-preview iframe {
+    width: 100%; height: 100%;
+    border: none; pointer-events: none;
+    transform-origin: top left;
+  }
+  .project-preview .preview-label {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: .5rem;
+    background: var(--tag-bg);
+    color: var(--muted); font-size: .78rem;
+  }
+  .preview-icon { font-size: 2rem; }
+
+  .project-status {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+  .dot-local { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+  .status-live { color: #22c55e; }
+  .status-local { color: #f59e0b; }
+
+  .project-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.25rem; font-weight: 700;
+    margin-bottom: .5rem;
+  }
+  .project-desc { color: var(--muted); font-size: .82rem; margin-bottom: 1.25rem; line-height: 1.7; }
+
+  .project-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.5rem; }
+  .tag {
+    background: var(--tag-bg); border: 1px solid var(--border);
+    color: var(--muted); font-size: .65rem;
+    padding: .25rem .65rem; border-radius: 3px;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+
+  .project-link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    color: var(--accent); font-size: .78rem;
+    text-decoration: none; letter-spacing: .05em;
+    transition: gap .2s;
+  }
+  .project-link:hover { gap: .8rem; }
+
+  /* ── AUTOMATIZACIONES ── */
+  #automations { padding: 7rem 0; background: linear-gradient(180deg, transparent, rgba(14,20,25,.6)); }
+
+  .auto-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem; font-weight: 800;
+    color: var(--border); line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .auto-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700; margin-bottom: .6rem;
+  }
+  .auto-desc { color: var(--muted); font-size: .82rem; line-height: 1.7; margin-bottom: 1.25rem; }
+
+  .flow {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .4rem;
+    font-size: .7rem; margin-bottom: 1.25rem;
+  }
+  .flow-step {
+    background: var(--tag-bg); border: 1px solid var(--border);
+    padding: .3rem .7rem; border-radius: 3px; color: var(--muted);
+  }
+  .flow-arrow { color: var(--accent); font-size: .8rem; }
+
+  .download-btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    border: 1px solid var(--border); color: var(--muted);
+    font-size: .72rem; padding: .5rem 1rem; border-radius: 3px;
+    text-decoration: none; letter-spacing: .06em; text-transform: uppercase;
+    transition: border-color .2s, color .2s;
+    cursor: pointer; background: none;
+  }
+  .download-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── NOTEBOOKS ── */
+  #notebooks { padding: 7rem 0; }
+
+  .nb-icon {
+    font-size: 1.8rem; margin-bottom: 1rem;
+  }
+  .nb-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem;
+  }
+  .nb-desc { color: var(--muted); font-size: .82rem; line-height: 1.7; margin-bottom: 1.25rem; }
+
+  .nb-libs { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.25rem; }
+  .lib-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: .65rem; color: var(--accent);
+    background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.2);
+    padding: .2rem .6rem; border-radius: 3px;
+  }
+
+  /* ── SKILLS STRIP ── */
+  #skills { padding: 5rem 0; border-top: 1px solid var(--border); }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .skill-item {
+    background: var(--surface);
+    padding: 1.75rem;
+    display: flex; flex-direction: column; gap: .4rem;
+  }
+  .skill-cat {
+    font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .skill-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700;
+  }
+  .skill-level {
+    font-size: .72rem; color: var(--muted);
+  }
+
+  /* ── CONTACT ── */
+  #contact {
+    padding: 8rem 0;
+    text-align: center;
+  }
+  #contact h2 { font-size: clamp(2.5rem, 5vw, 4.5rem); margin-bottom: 1rem; }
+  #contact p { color: var(--muted); margin-bottom: 2.5rem; }
+  .contact-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .contact-link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    border: 1px solid var(--border); color: var(--muted);
+    font-size: .78rem; padding: .75rem 1.5rem; border-radius: 4px;
+    text-decoration: none; letter-spacing: .06em; text-transform: uppercase;
+    transition: border-color .2s, color .2s;
+  }
+  .contact-link:hover { border-color: var(--accent); color: var(--accent); }
+  .contact-link.primary {
+    background: var(--accent); color: #000; border-color: var(--accent);
+    font-family: 'Syne', sans-serif; font-weight: 700;
+  }
+  .contact-link.primary:hover { opacity: .85; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .72rem; color: var(--muted);
+  }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* ── ANIMATIONS ── */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .skills-grid { grid-template-columns: 1fr; }
+    nav { padding: 1rem 1.25rem; }
+    .nav-links { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Iván Gazga</div>
+  <ul class="nav-links">
+    <li><a href="#web">Sitios Web</a></li>
+    <li><a href="#automations">n8n</a></li>
+    <li><a href="#notebooks">Análisis</a></li>
+    <li><a href="#contact">Contacto</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Especialista en Inteligencia Artificial</p>
+    <h1>
+      Automatizo,<br>
+      <span class="outline">analizo</span> y<br>
+      <span class="glow">construyo</span> con IA.
+    </h1>
+    <p class="hero-desc">
+      Desarrollo flujos de automatización con n8n, modelos predictivos con Python
+      y experiencias web que conectan con las personas. Basado en Guadalajara, Jalisco.
+    </p>
+    <div class="hero-chips">
+      <span class="chip">n8n Workflows</span>
+      <span class="chip">Claude API</span>
+      <span class="chip">Python · scikit-learn</span>
+      <span class="chip">HTML · CSS · JS</span>
+      <span class="chip">Google Sheets API</span>
+      <span class="chip">Análisis de datos</span>
+    </div>
+    <a href="#contact" class="hero-cta">Hablemos →</a>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- WEB PROJECTS -->
+<section id="web">
+  <div class="container">
+    <p class="section-label fade-up">Proyectos Web</p>
+    <h2 class="fade-up">Sitios que he construido</h2>
+    <p class="section-desc fade-up">Landing pages y sitios corporativos desarrollados con HTML, CSS y JavaScript vanilla. Responsive, rápidos y accesibles.</p>
+
+    <div class="grid-3">
+
+      <!-- Proyecto 1 — THE OCEAN GROUP -->
+      <div class="card project-card fade-up">
+        <div class="project-preview">
+          <div class="preview-label">
+            <span class="preview-icon">🌊</span>
+            <span>theoceangroup.mx</span>
+            <small style="color:var(--muted);font-size:.7rem">Haz clic en "Ver sitio" para abrirlo</small>
+          </div>
+        </div>
+        <div class="project-status">
+          <span class="dot dot-live"></span>
+          <span class="status-live">En línea</span>
+        </div>
+        <div class="project-title">The Ocean Group</div>
+        <p class="project-desc">Sitio de publicidad para proyecto inmobiliario ubicado en la costa de México. Diseño orientado a transmitir exclusividad y estilo de vida frente al mar, con secciones de galería, amenidades y contacto.</p>
+        <div class="project-tags">
+          <span class="tag">HTML</span>
+          <span class="tag">CSS</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">Figma</span>
+          <span class="tag">Claude Code</span>
+          <span class="tag">Inmobiliario</span>
+        </div>
+        <a href="https://theoceangroup.mx" target="_blank" class="project-link">Ver sitio →</a>
+      </div>
+
+      <!-- Proyecto 2 — ARTURO PULIDO -->
+      <div class="card project-card fade-up">
+        <div class="project-preview">
+          <div class="preview-label">
+            <span class="preview-icon">🏡</span>
+            <span>arturopulido.com.mx</span>
+            <small style="color:var(--muted);font-size:.7rem">Haz clic en "Ver sitio" para abrirlo</small>
+          </div>
+        </div>
+        <div class="project-status">
+          <span class="dot dot-live"></span>
+          <span class="status-live">En línea</span>
+        </div>
+        <div class="project-title">Arturo Pulido Real Estate</div>
+        <p class="project-desc">Landing page personal para agente inmobiliario independiente. Pensada para generar confianza, mostrar propiedades destacadas y capturar leads de forma directa mediante formulario de contacto.</p>
+        <div class="project-tags">
+          <span class="tag">HTML</span>
+          <span class="tag">CSS</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">Figma</span>
+          <span class="tag">Claude Code</span>
+          <span class="tag">Landing Page</span>
+        </div>
+        <a href="https://arturopulido.com.mx" target="_blank" class="project-link">Ver sitio →</a>
+      </div>
+
+      <!-- Proyecto 3 — BUNEFE (VIDEO) -->
+      <div class="card project-card fade-up">
+        <div class="project-preview" style="height:220px;padding:0;border:none;background:#000;border-radius:3px;overflow:hidden;">
+          <!-- Reemplaza TU_VIDEO_ID_BUNEFE con el ID de tu video de YouTube no listado -->
+          <iframe
+            src="https://www.youtube.com/embed/D1ew-eXLVfo?rel=0&modestbranding=1&controls=1"
+            width="100%" height="100%"
+            style="border:none;pointer-events:auto;"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            title="Demo Bunefe">
+          </iframe>
+        </div>
+        <div class="project-status" style="margin-top:1.25rem">
+          <span class="dot" style="background:#a855f7;box-shadow:0 0 6px #a855f7"></span>
+          <span style="color:#a855f7;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase">Demo en video</span>
+        </div>
+        <div class="project-title">Bunefe</div>
+        <p class="project-desc">Sitio web para inmobiliaria con catálogo interactivo de departamentos y lotes. Incluye fichas de cada propiedad, filtros de búsqueda y formulario de interés. Próximo lanzamiento.</p>
+        <div class="project-tags">
+          <span class="tag">HTML</span>
+          <span class="tag">CSS</span>
+          <span class="tag">JavaScript</span>
+          <span class="tag">Figma</span>
+          <span class="tag">Claude Code</span>
+          <span class="tag">Catálogo</span>
+        </div>
+        <span class="project-link" style="opacity:.45;cursor:default;font-size:.75rem">🔒 Código privado</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- AUTOMATIZACIONES -->
+<section id="automations">
+  <div class="container">
+    <p class="section-label fade-up">Automatizaciones n8n</p>
+    <h2 class="fade-up">Flujos con IA integrada</h2>
+    <p class="section-desc fade-up">Workflows listos para importar en n8n. Cada uno integra modelos de lenguaje (Claude) para procesar, clasificar y enrutar datos de forma autónoma.</p>
+
+    <div class="grid-2">
+
+      <div class="card fade-up">
+        <div class="auto-number">01</div>
+        <div class="auto-title">Lead Enrichment con IA → Google Sheets</div>
+        <p class="auto-desc">Un formulario web dispara el flujo: Claude analiza al prospecto, le asigna un score (1–100), detecta su industria y recomienda la acción comercial. Los hot leads (≥70) disparan una alerta en Slack.</p>
+        <div class="flow">
+          <span class="flow-step">Webhook</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Validar datos</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Claude (score)</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Google Sheets</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Slack alert</span>
+        </div>
+        <div class="project-tags" style="margin-bottom:1.25rem">
+          <span class="tag">n8n</span>
+          <span class="tag">Claude API</span>
+          <span class="tag">Google Sheets</span>
+          <span class="tag">Slack</span>
+          <span class="tag">Webhook</span>
+        </div>
+        <a class="download-btn" href="../01_lead_enrichment_ai.json" download>↓ Descargar JSON</a>
+      </div>
+
+      <div class="card fade-up">
+        <div class="auto-number">02</div>
+        <div class="auto-title">Chatbot IA · Captación de Leads y Citas</div>
+        <p class="auto-desc">Agente conversacional que recopila datos del prospecto de forma natural (sin formulario), detecta cuándo tiene suficiente información, agenda la reunión y envía un email de confirmación automático.</p>
+        <div class="flow">
+          <span class="flow-step">Mensaje usuario</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Claude (chat)</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Extractor JSON</span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-step">Sheets + Email</span>
+        </div>
+        <div class="project-tags" style="margin-bottom:1.25rem">
+          <span class="tag">n8n</span>
+          <span class="tag">Claude API</span>
+          <span class="tag">Google Sheets</span>
+          <span class="tag">SMTP</span>
+          <span class="tag">Agente IA</span>
+        </div>
+        <a class="download-btn" href="../02_chatbot_leads_citas.json" download>↓ Descargar JSON</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- NOTEBOOKS -->
+<section id="notebooks">
+  <div class="container">
+    <p class="section-label fade-up">Análisis de Datos</p>
+    <h2 class="fade-up">Notebooks de Python</h2>
+    <p class="section-desc fade-up">Análisis aplicados al marketing digital: visualización exploratoria y machine learning predictivo sobre datos reales de campañas en redes sociales.</p>
+
+    <div class="grid-2">
+
+      <div class="card fade-up">
+        <div class="nb-icon">📊</div>
+        <div class="nb-title">Visualización de Campañas en Redes Sociales</div>
+        <p class="nb-desc">EDA completo sobre 1,200 campañas en Instagram, Facebook, TikTok y LinkedIn. Gráficas de ROAS por plataforma, evolución de CTR mensual, heatmap de conversión por segmento de edad y scatter de gasto vs ingresos.</p>
+        <div class="nb-libs">
+          <span class="lib-badge">pandas</span>
+          <span class="lib-badge">numpy</span>
+          <span class="lib-badge">matplotlib</span>
+          <span class="lib-badge">seaborn</span>
+        </div>
+        <div class="project-tags" style="margin-bottom:1.25rem">
+          <span class="tag">EDA</span>
+          <span class="tag">Visualización</span>
+          <span class="tag">Marketing</span>
+          <span class="tag">5 gráficas</span>
+        </div>
+        <a class="download-btn" href="notebooks/01_visualizacion_marketing_redes.ipynb" download>↓ Descargar .ipynb</a>
+      </div>
+
+      <div class="card fade-up">
+        <div class="nb-icon">🤖</div>
+        <div class="nb-title">ML: Predicción de Conversiones</div>
+        <p class="nb-desc">Clasificación binaria para predecir si una campaña logrará tasa de conversión ≥4%. Comparación de Logistic Regression, Random Forest y Gradient Boosting con validación cruzada, curvas ROC e importancia de features.</p>
+        <div class="nb-libs">
+          <span class="lib-badge">scikit-learn</span>
+          <span class="lib-badge">pandas</span>
+          <span class="lib-badge">matplotlib</span>
+          <span class="lib-badge">seaborn</span>
+        </div>
+        <div class="project-tags" style="margin-bottom:1.25rem">
+          <span class="tag">ML</span>
+          <span class="tag">Clasificación</span>
+          <span class="tag">Random Forest</span>
+          <span class="tag">ROC-AUC</span>
+        </div>
+        <a class="download-btn" href="notebooks/02_ml_prediccion_conversiones.ipynb" download>↓ Descargar .ipynb</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <p class="section-label fade-up">Stack técnico</p>
+    <h2 class="fade-up" style="margin-bottom:2.5rem">Herramientas & tecnologías</h2>
+
+    <div class="skills-grid fade-up">
+      <div class="skill-item">
+        <span class="skill-cat">Automatización</span>
+        <span class="skill-name">n8n</span>
+        <span class="skill-level">Flujos con IA · APIs · Webhooks</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-cat">Inteligencia Artificial</span>
+        <span class="skill-name">Claude API</span>
+        <span class="skill-level">Agentes · NLP · Clasificación</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-cat">Análisis de Datos</span>
+        <span class="skill-name">Python</span>
+        <span class="skill-level">Pandas · scikit-learn · Matplotlib</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-cat">Desarrollo Web</span>
+        <span class="skill-name">HTML · CSS · JS</span>
+        <span class="skill-level">Vanilla · Responsive · Accesible</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-cat">Integraciones</span>
+        <span class="skill-name">Google Workspace</span>
+        <span class="skill-level">Sheets · Gmail · Calendar API</span>
+      </div>
+      <div class="skill-item">
+        <span class="skill-cat">Metodología</span>
+        <span class="skill-name">Prompting & RAG</span>
+        <span class="skill-level">Prompt engineering · Pipelines</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <p class="section-label fade-up" style="justify-content:center">Contacto</p>
+    <h2 class="fade-up">¿Trabajamos juntos?</h2>
+    <p class="fade-up">Disponible para proyectos freelance y posiciones de tiempo completo.</p>
+    <div class="contact-links fade-up">
+      <a href="/cdn-cgi/l/email-protection#ea839c8b848d8b908daa8d878b8386c4898587" class="contact-link primary">Enviar email</a>
+      <a href="https://www.linkedin.com/in/ivan-rogelio-gazga-garcia" target="_blank" class="contact-link">LinkedIn</a>
+      <a href="https://github.com/GazgaIvan" target="_blank" class="contact-link">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2025 · Iván Rogelio Gazga García · Especialista en IA</span>
+  <span style="font-family:'DM Mono',monospace;font-size:.65rem;color:var(--muted)">Guadalajara, Jalisco · MX</span>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Fade-up on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Active nav highlight
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('s
